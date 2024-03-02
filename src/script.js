@@ -55,7 +55,7 @@ const GRASS_LOD_DIST = 15;
 const GRASS_MAX_DIST = 100;
 
 const GRASS_PATCH_SIZE = 10;
-const NUM_GRASS = GRASS_PATCH_SIZE * GRASS_PATCH_SIZE;
+const NUM_GRASS = GRASS_PATCH_SIZE * GRASS_PATCH_SIZE * 4;
 
 const GRASS_WIDTH = 0.1;
 const GRASS_HEIGHT = 1.5;
@@ -151,15 +151,14 @@ const grassMesh = new THREE.InstancedMesh(grassGeometry, grassMaterial, NUM_GRAS
 
 const matrix = new THREE.Matrix4(); // Create a matrix to hold the instance transformation
 let index = 0
-for (let x = -(GRASS_PATCH_SIZE / 2); x < (GRASS_PATCH_SIZE / 2); x++) {
-    for (let z = -(GRASS_PATCH_SIZE / 2); z < (GRASS_PATCH_SIZE / 2); z++) {
-        const posX = x + 0.5; // Calculate x position based on grid coordinate
-        const posZ = z +0.5; // Calculate z position based on grid coordinate
+for (let x = -(GRASS_PATCH_SIZE / 2); x < (GRASS_PATCH_SIZE / 2); x += 0.5) {
+    for (let z = -(GRASS_PATCH_SIZE / 2); z < (GRASS_PATCH_SIZE / 2); z += 0.5) {
+        const posX = x + 0.25 + utilService.getRandomDoubleInclusive(-0.2, 0.2) // Calculate x position based on grid coordinate
+        const posZ = z + 0.25 + utilService.getRandomDoubleInclusive(-0.2, 0.2); // Calculate z position based on grid coordinate
         const posY = 0; // Assuming y-coordinate is always 0
 
         matrix.makeTranslation(posX, posY, posZ); // Set the translation of the matrix
 
-        // const instanceIndex = x * (GRASS_PATCH_SIZE / 2) + z + (GRASS_PATCH_SIZE / 2);   // Calculate instance index based on grid coordinate
         grassMesh.setMatrixAt(index, matrix); // Apply the transformation to the instance at index
         index++
     }
