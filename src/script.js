@@ -3,6 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'
 import GUI from 'lil-gui'
 import { utilService } from './utils/util'
+import grassFragmentShader from './shaders/grass/fragment.glsl'
+import grassVertexShader from './shaders/grass/vertex.glsl'
 
 /**
  * Base
@@ -16,6 +18,9 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+
+//TextureLoader
+const textureLoader = new THREE.TextureLoader()
 
 // Loaders
 const rgbeLoader = new RGBELoader()
@@ -32,33 +37,55 @@ rgbeLoader.load('/spruit_sunrise.hdr', (environmentMap) => {
 })
 
 
-//grass blades
-// const positions = []
-// const indexes = []
-// const uvs = []
-// const grassBladesInstances = 1024
-// const grassPatchX = 10
-// const grassPatchY = 0
-// const grassPatchZ = 10
-// const grassBladeVertices = 15
+const BLADE_WIDTH = 0.1
+const BLADE_HEIGHT = 0.8
+const BLADE_HEIGHT_VARIATION = 0.6
+const BLADE_VERTEX_COUNT = 5
+const BLADE_TIP_OFFSET = 0.1
+const SURFACE_SIZE = 30
+const GRASS_COUNT = 100000
 
-const M_TMP = new THREE.Matrix4();
-const S_TMP = new THREE.Sphere();
-const AABB_TMP = new THREE.Box3();
+function interpolate(val, oldMin, oldMax, newMin, newMax) {
+    return ((val - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin
+}
 
+function computeBlade(center, index = 0) {
+    const height = BLADE_HEIGHT + Math.random() * BLADE_HEIGHT_VARIATION
+    const vIndex = index * BLADE_VERTEX_COUNT
 
-const GRASS_SEGMENTS_LOW = 1;
-const GRASS_SEGMENTS_HIGH = 6;
-const GRASS_VERTICES_LOW = (GRASS_SEGMENTS_LOW + 1) * 2;
-const GRASS_VERTICES_HIGH = (GRASS_SEGMENTS_HIGH + 1) * 2;
-const GRASS_LOD_DIST = 15;
-const GRASS_MAX_DIST = 100;
+    // Randomize blade orientation and tip angle
+    const yaw = Math.random() * Math.PI * 2
+    const yawVec = [Math.sin(yaw), 0, -Math.cos(yaw)]
+    const bend = Math.random() * Math.PI * 2
+    const bendVec = [Math.sin(bend), 0, -Math.cos(bend)]
 
-const GRASS_PATCH_SIZE = 10;
-const NUM_GRASS = GRASS_PATCH_SIZE * GRASS_PATCH_SIZE * 4;
+    // Calc bottom, middle, and tip vertices
+    const bl = yawVec.map((n, i) => n * (BLADE_WIDTH / 2) * 1 + center[i])
+    const br = yawVec.map((n, i) => n * (BLADE_WIDTH / 2) * -1 + center[i])
+    const tl = yawVec.map((n, i) => n * (BLADE_WIDTH / 4) * 1 + center[i])
+    const tr = yawVec.map((n, i) => n * (BLADE_WIDTH / 4) * -1 + center[i])
+    const tc = bendVec.map((n, i) => n * BLADE_TIP_OFFSET + center[i])
 
-const GRASS_WIDTH = 0.1;
-const GRASS_HEIGHT = 1.5;
+    // Attenuate height
+    tl[1] += height / 2
+    tr[1] += height / 2
+    tc[1] += height
+
+    return {
+        positions: [...bl, ...br, ...tr, ...tl, ...tc],
+        indices: [
+            vIndex,
+            vIndex + 1,
+            vIndex + 2,
+            vIndex + 2,
+            vIndex + 4,
+            vIndex + 3,
+            vIndex + 3,
+            vIndex,
+            vIndex + 2
+        ]
+    }
+}
 
 class InstancedFloat16BufferAttribute extends THREE.InstancedBufferAttribute {
 
@@ -70,122 +97,144 @@ class InstancedFloat16BufferAttribute extends THREE.InstancedBufferAttribute {
     }
 };
 
-function createGrassTile() { //square tile //LOD support
-    // const vertices = (segments + 1) * 2;
-    // const indices = [];
+// function createGrassGeometry() {
+//     const scalex = 0.1
+//     const scaley = 0.15
 
-    // for (let i = 0; i < segments; ++i) {
+//     const vertices = new Float32Array([
+//         -1.0 * scalex, 0 * scaley, 0,     // v1
+//         1.0 * scalex, 0 * scaley, 0,      // v2
+//         1.0 * scalex, 2.0 * scaley, 0,       // v3
 
-    // }
-    const scalex = 0.1
-    const scaley = 0.15
+//         1.0 * scalex, 2.0 * scaley, 0,       // v4
+//         -1.0 * scalex, 2.0 * scaley, 0,      // v5
+//         -1.0 * scalex, 0 * scaley, 0,     // v6
 
-    const vertices = new Float32Array([
-        -1.0 * scalex, 0 * scaley, 0,     // v1
-        1.0 * scalex, 0 * scaley, 0,      // v2
-        1.0 * scalex, 2.0 * scaley, 0,       // v3
+//         -1.0 * scalex, 2.0 * scaley, 0,      // v7
+//         1.0 * scalex, 2.0 * scaley, 0,       // v8
+//         (1.0 - 0.1) * scalex, 4.0 * scaley, 0, // v9
 
-        1.0 * scalex, 2.0 * scaley, 0,       // v4
-        -1.0 * scalex, 2.0 * scaley, 0,      // v5
-        -1.0 * scalex, 0 * scaley, 0,     // v6
+//         (1.0 - 0.1) * scalex, 4.0 * scaley, 0, // v10
+//         (-1.0 + 0.1) * scalex, 4.0 * scaley, 0, // v11
+//         -1.0 * scalex, 2.0 * scaley, 0,      // v12
 
-        -1.0 * scalex, 2.0 * scaley, 0,      // v7
-        1.0 * scalex, 2.0 * scaley, 0,       // v8
-        (1.0 - 0.1) * scalex, 4.0 * scaley, 0, // v9
+//         (-1.0 + 0.1) * scalex, 4.0 * scaley, 0, // v13
+//         (1.0 - 0.1) * scalex, 4.0 * scaley, 0, // v14
+//         (1.0 - 0.3) * scalex, 6.0 * scaley, 0,  // v15
 
-        (1.0 - 0.1) * scalex, 4.0 * scaley, 0, // v10
-        (-1.0 + 0.1) * scalex, 4.0 * scaley, 0, // v11
-        -1.0 * scalex, 2.0 * scaley, 0,      // v12
+//         (1.0 - 0.3) * scalex, 6.0 * scaley, 0, // v17
+//         (-1.0 + 0.3) * scalex, 6.0 * scaley, 0, // v18
+//         (-1.0 + 0.1) * scalex, 4.0 * scaley, 0, // v19
 
-        (-1.0 + 0.1) * scalex, 4.0 * scaley, 0, // v13
-        (1.0 - 0.1) * scalex, 4.0 * scaley, 0, // v14
-        (1.0 - 0.3) * scalex, 6.0 * scaley, 0,  // v15
+//         (-1.0 + 0.3) * scalex, 6.0 * scaley, 0, // v20
+//         (1.0 - 0.3) * scalex, 6.0 * scaley, 0, // v21
+//         (1.0 - 0.5) * scalex, 8.0 * scaley, 0,  // v22
 
-        (1.0 - 0.3) * scalex, 6.0 * scaley, 0, // v17
-        (-1.0 + 0.3) * scalex, 6.0 * scaley, 0, // v18
-        (-1.0 + 0.1) * scalex, 4.0 * scaley, 0, // v19
+//         (1.0 - 0.5) * scalex, 8.0 * scaley, 0, // v23
+//         (-1.0 + 0.5) * scalex, 8.0 * scaley, 0, // v24
+//         (-1.0 + 0.3) * scalex, 6.0 * scaley, 0, // v25
 
-        (-1.0 + 0.3) * scalex, 6.0 * scaley, 0, // v20
-        (1.0 - 0.3) * scalex, 6.0 * scaley, 0, // v21
-        (1.0 - 0.5) * scalex, 8.0 * scaley, 0,  // v22
+//         (-1.0 + 0.5) * scalex, 8.0 * scaley, 0, // v26
+//         (1.0 - 0.5) * scalex, 8.0 * scaley, 0, // v27
+//         0, 10.0 * scaley, 0,                  // v28
+//     ]);
 
-        (1.0 - 0.5) * scalex, 8.0 * scaley, 0, // v23
-        (-1.0 + 0.5) * scalex, 8.0 * scaley, 0, // v24
-        (-1.0 + 0.3) * scalex, 6.0 * scaley, 0, // v25
+//     const geo = new THREE.InstancedBufferGeometry();
+//     geo.instanceCount = NUM_GRASS;
 
-        (-1.0 + 0.5) * scalex, 8.0 * scaley, 0, // v26
-        (1.0 - 0.5) * scalex, 8.0 * scaley, 0, // v27
-        0, 10.0 * scaley, 0,                  // v28
-    ]);
+//     const terrPosis = []
+//     const angles = []
+//     const indices = []
+//     let index = 1
+//     for (let i = 0; i < NUM_GRASS; i++) {
+//         const posX = utilService.getRandomDoubleInclusive(-5, 5)
+//         const posZ = utilService.getRandomDoubleInclusive(-5, 5)
+//         const posY = 0.0
 
-    const offsets = [];
-    for (let i = 0; i < NUM_GRASS; ++i) {
-        //-5, 200
-        offsets.push(utilService.getRandomDoubleInclusive(-GRASS_PATCH_SIZE * 0.5, GRASS_PATCH_SIZE * 20));
-        offsets.push(utilService.getRandomDoubleInclusive(-GRASS_PATCH_SIZE * 0.5, GRASS_PATCH_SIZE * 20));
-        offsets.push(0);
+//         terrPosis.push(posX, posY, posZ)
+//         let angle = Math.random() * 360;
+//         angles.push(angle);
+//         indices.push(index);
+//         index++
+//     }
+//     geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+//     geo.setAttribute('terrPosi', new THREE.InstancedBufferAttribute(new Float32Array(terrPosis), 3))
+//     geo.setAttribute('angle', new THREE.InstancedBufferAttribute(new Float32Array(angles), 1))
+//     geo.setAttribute('indices', new THREE.InstancedBufferAttribute(new Float32Array(indices), 1))
+
+//     return geo;
+// }
+
+function createGrassGeometry() {
+    const positions = []
+    const uvs = []
+    const indices = []
+
+    const geo = new THREE.BufferGeometry()
+
+    for (let i = 0; i < GRASS_COUNT; i++) {
+        const surfaceMin = (SURFACE_SIZE / 2) * -1
+        const surfaceMax = SURFACE_SIZE / 2
+        const radius = (SURFACE_SIZE / 2) * Math.random()
+        const theta = Math.random() * 2 * Math.PI
+
+        const x = radius * Math.cos(theta)
+        const y = radius * Math.sin(theta)
+
+        uvs.push(
+            ...Array.from({ length: BLADE_VERTEX_COUNT }).flatMap(() => [
+                interpolate(x, surfaceMin, surfaceMax, 0, 1),
+                interpolate(y, surfaceMin, surfaceMax, 0, 1)
+            ])
+        )
+
+        const blade = computeBlade([x, 0, y], i)
+        positions.push(...blade.positions)
+        indices.push(...blade.indices)
     }
 
-    // const offsetsData = offsets.map(THREE.DataUtils.toHalfFloat);
+    geo.setAttribute(
+        'position',
+        new THREE.BufferAttribute(new Float32Array(positions), 3)
+    )
+    geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2))
+    geo.setIndex(indices)
+    geo.computeVertexNormals()
 
-    // const vertID = new Uint8Array(vertices * 2);
-    // for (let i = 0; i < vertices * 2; ++i) {
-    //     vertID[i] = i;
-    // }
-
-    const geo = new THREE.InstancedBufferGeometry();
-    geo.instanceCount = NUM_GRASS;
-    // geo.setAttribute('vertIndex', new THREE.Uint8BufferAttribute(vertID, 1));
-    geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    // geo.setIndex(indices);
-    // geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 1 + GRASS_PATCH_SIZE * 2);
-
-    return geo;
+    return geo
 }
 
-const grassMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide })
-const grassGeometry = createGrassTile();
-console.log(grassGeometry);
-// const tempGeo = new THREE.SphereGeometry(2, 15, 15)
-const grassMesh = new THREE.InstancedMesh(grassGeometry, grassMaterial, NUM_GRASS);
+const perlinTexture = textureLoader.load('./textures/perlin/Perlin_noise.png')
+perlinTexture.wrapS = THREE.RepeatWrapping
+perlinTexture.wrapT = THREE.RepeatWrapping
 
-const matrix = new THREE.Matrix4(); // Create a matrix to hold the instance transformation
-let index = 0
-for (let x = -(GRASS_PATCH_SIZE / 2); x < (GRASS_PATCH_SIZE / 2); x += 0.5) {
-    for (let z = -(GRASS_PATCH_SIZE / 2); z < (GRASS_PATCH_SIZE / 2); z += 0.5) {
-        const posX = x + 0.25 + utilService.getRandomDoubleInclusive(-0.2, 0.2) // Calculate x position based on grid coordinate
-        const posZ = z + 0.25 + utilService.getRandomDoubleInclusive(-0.2, 0.2); // Calculate z position based on grid coordinate
-        const posY = 0; // Assuming y-coordinate is always 0
+const grassGeometry = createGrassGeometry()
 
-        matrix.makeTranslation(posX, posY, posZ); // Set the translation of the matrix
+const grassMaterial = new THREE.ShaderMaterial({
+    vertexShader: grassVertexShader,
+    fragmentShader: grassFragmentShader,
+    uniforms: {
+        uTime: new THREE.Uniform(0),
+        uPerlinTexture: new THREE.Uniform(perlinTexture)
+    },
+    // wireframe:true,
+    side: THREE.DoubleSide
+})
+// const grassGeometry = new THREE.PlaneGeometry(15,15,15,15)
+const grassMesh = new THREE.Mesh(grassGeometry, grassMaterial)
+grassMesh.receiveShadow = true
+grassMesh.castShadow = true
 
-        grassMesh.setMatrixAt(index, matrix); // Apply the transformation to the instance at index
-        index++
-    }
-}
 
-grassMesh.instanceMatrix.needsUpdate = true;
 
-console.log(grassMesh);
 scene.add(grassMesh)
 
 
 //grid floor
 
-const gridHelper = new THREE.GridHelper(GRASS_PATCH_SIZE, GRASS_PATCH_SIZE)
-// gridHelper.rotation.x = Math.PI /2
-scene.add(gridHelper)
-
-/**
- * Placeholder
- */
-const placeholder = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(2, 5),
-    new THREE.MeshPhysicalMaterial()
-)
-// scene.add(placeholder)
-// objects
-
+// const gridHelper = new THREE.GridHelper(SURFACE_SIZE, SURFACE_SIZE)
+// // gridHelper.rotation.x = Math.PI /2
+// scene.add(gridHelper)
 
 /**
  * Lights
@@ -231,7 +280,7 @@ window.addEventListener('resize', () => {
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(35, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(-10, 6, -2)
+camera.position.set(0, 6, -20)
 scene.add(camera)
 
 // Controls
@@ -243,7 +292,8 @@ controls.enableDamping = true
  */
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
-    antialias: true
+    antialias: true,
+    alpha: true
 })
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -259,6 +309,9 @@ const clock = new THREE.Clock()
 
 const tick = () => {
     const elapsedTime = clock.getElapsedTime()
+    grassMaterial.uniforms.uTime.value = elapsedTime
+    
+    // console.log(grassMaterial.uniforms.uTime.value);
 
     // Update controls
     controls.update()
