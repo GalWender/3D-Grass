@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import perlinTex from '../textures/perlin/Perlin_noise.png'
 
 export const textureService = {
     loadTexture
@@ -8,7 +9,7 @@ export const textureService = {
 function loadTexture() {
     const textureLoader = new THREE.TextureLoader()
     
-    const perlinTexture = textureLoader.load('../textures/perlin/Perlin_noise.png')
+    const perlinTexture = textureLoader.load(perlinTex)
     perlinTexture.wrapS = THREE.RepeatWrapping
     perlinTexture.wrapT = THREE.RepeatWrapping
 
