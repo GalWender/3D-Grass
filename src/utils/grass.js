@@ -88,8 +88,6 @@ function createGrassGeometry() {
         }
         vertID[i] = i;
     }
-    console.log(angles);
-    console.log(positions);
 
     geo.setAttribute(
         'position',
