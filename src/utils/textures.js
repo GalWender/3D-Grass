@@ -8,7 +8,7 @@ export const textureService = {
 function loadTexture() {
     const textureLoader = new THREE.TextureLoader()
     
-    const perlinTexture = textureLoader.load('./src/textures/perlin/Perlin_noise.png')
+    const perlinTexture = textureLoader.load('../src/textures/perlin/Perlin_noise.png')
     perlinTexture.wrapS = THREE.RepeatWrapping
     perlinTexture.wrapT = THREE.RepeatWrapping
 
