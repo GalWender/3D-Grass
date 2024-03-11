@@ -105,7 +105,7 @@ float noise12(vec2 p) {
 }
 
 float wave(float waveSize, float tipDistance, float centerDistance,float height) {
-    return sin((uTime * 1.4) + waveSize) * sin((uTime * 0.8) + waveSize) * smoothstep(0.0, 3.14159,height) ;
+    return sin((uTime * 1.4) + waveSize) * sin((uTime * 0.8) + waveSize * 1.5) * smoothstep(0.0, 3.14159,height) ;
 }
 
 void main() {
