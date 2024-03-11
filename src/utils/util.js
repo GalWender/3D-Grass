@@ -1,6 +1,7 @@
 export const utilService = {
     getRandomIntInclusive,
-    getRandomDoubleInclusive
+    getRandomDoubleInclusive,
+    interpolate
 }
 
 function getRandomIntInclusive(min, max) {
@@ -11,4 +12,8 @@ function getRandomIntInclusive(min, max) {
 
 function getRandomDoubleInclusive(min, max) {
     return Math.random() * (max - min) + min;
+}
+
+function interpolate(val, oldMin, oldMax, newMin, newMax) {
+    return ((val - oldMin) * (newMax - newMin)) / (oldMax - oldMin) + newMin
 }
