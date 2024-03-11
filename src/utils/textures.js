@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import perlinTex from '../textures/perlin/Perlin_noise.png'
+import perlinTex from '../textures/perlin/noiseTexture.png'
 
 export const textureService = {
     loadTexture
