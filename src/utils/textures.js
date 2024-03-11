@@ -5,7 +5,6 @@ export const textureService = {
     loadTexture
 }
 
-
 function loadTexture() {
     const textureLoader = new THREE.TextureLoader()
     
