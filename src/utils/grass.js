@@ -10,12 +10,18 @@ export const grassService = {
     createGrassGrid,
 }
 
-// const BLADE_WIDTH = 0.1
+const BLADE_WIDTH = 0.1
 const BLADE_HEIGHT = 0.8
 const BLADE_HEIGHT_VARIATION = 0.6
 const BLADE_VERTEX_COUNT = 7
 const SURFACE_SIZE = 30
-const GRASS_COUNT = 100000
+const GRASS_COUNT = 1000000
+
+// const BLADE_HEIGHT = 0.8
+// const BLADE_HEIGHT_VARIATION = 0.6
+// const BLADE_VERTEX_COUNT = 7
+// const SURFACE_SIZE = 30
+// const GRASS_COUNT = 1000000
 
 const { perlinTexture } = textureService.loadTexture()
 
@@ -25,6 +31,8 @@ function computeBlade() {
     // const yawVec = [Math.sin(yaw), 0, -Math.cos(yaw)]
     const scaleX = 0.03
     const scaleY = 0.08 * height
+    // const scaleX = 0.005
+    // const scaleY = 0.01 * height
 
     // // Randomize blade orientation
 
@@ -103,11 +111,15 @@ function createGrassGeometry() {
 }
 
 function createGrassMaterial() {
+    const uniforms = {
+        uGrassBaseColor: new THREE.Uniform(new THREE.Color('#A5DD9B')),
+        uGrassTipColor: new THREE.Uniform(new THREE.Color('#F6F193'))
+    }
     return new THREE.ShaderMaterial({
         vertexShader: grassVertexShader,
         fragmentShader: grassFragmentShader,
         uniforms: {
-            uLog: new THREE.Uniform(0),
+            ...uniforms,
             uTime: new THREE.Uniform(0),
             uWind: new THREE.Uniform(new THREE.Vector2(1.0, 1.0)),
             uPerlinTexture: new THREE.Uniform(perlinTexture)
@@ -118,5 +130,11 @@ function createGrassMaterial() {
 }
 
 function createGrassGrid() {
-    return new THREE.GridHelper(SURFACE_SIZE, SURFACE_SIZE)
+    // return new THREE.GridHelper(SURFACE_SIZE, SURFACE_SIZE)
+    const geo = new THREE.PlaneGeometry(SURFACE_SIZE, SURFACE_SIZE, SURFACE_SIZE, SURFACE_SIZE)
+    const mat = new THREE.MeshBasicMaterial({color: '#007010'})
+    const mesh = new THREE.Mesh(geo,mat)
+    mesh.receiveShadow = true
+    mesh.rotation.x = -Math.PI /2
+    return mesh
 }
