@@ -43,34 +43,31 @@ rgbeLoader.load('/spruit_sunrise.hdr', (environmentMap) => {
 const TerrainScale = 1
 const terrainGeometry = new THREE.PlaneGeometry(30, 30, 500, 500)
 
-terrainGeometry.deleteAttribute('uv')
-terrainGeometry.deleteAttribute('normal')
+// terrainGeometry.deleteAttribute('uv')
+// terrainGeometry.deleteAttribute('normal')
 terrainGeometry.rotateX(- Math.PI / 2)
 const uniforms = {
     uColorWaterDeep: new THREE.Uniform(new THREE.Color('#002b3d')),
     uColorWaterSurface: new THREE.Uniform(new THREE.Color('#66a8ff')),
-    uGrassBaseColor: new THREE.Uniform(new THREE.Color('#3B6630')),
+    uGrassBaseColor: new THREE.Uniform(new THREE.Color('#214c1a')),
     uColorSand: new THREE.Uniform(new THREE.Color('#ffe894')),
     uColorSnow: new THREE.Uniform(new THREE.Color('#ffffff')),
-    uColorRock: new THREE.Uniform(new THREE.Color('#bfbd8d')),
+    uColorRock: new THREE.Uniform(new THREE.Color('#6d6d6d')),
 }
-const terrainMaterial = new CustomShaderMaterial({
-    baseMaterial: THREE.MeshStandardMaterial,
+const terrainMaterial = new THREE.ShaderMaterial({
     vertexShader: terrainVertexShader,
     fragmentShader: terrainFragmentShader,
     uniforms,
-    silent: true,
-    metalness:0,
-    roughness:0.5,
-    color: '#85d534'
 })
 
 
-const terrainDepthMaterial = new CustomShaderMaterial({
-    baseMaterial: THREE.MeshDepthMaterial,
+const terrainDepthMaterial = new THREE.ShaderMaterial({
     vertexShader: terrainVertexShader,
-    silent: true,
-    depthPacking: THREE.RGBADepthPacking
+    fragmentShader: `
+    void main() {
+        gl_FragColor = vec4(vec3(gl_FragCoord.z), 1.0);
+    }
+`,
 })
 
 const terrianMesh = new THREE.Mesh(terrainGeometry,terrainMaterial)

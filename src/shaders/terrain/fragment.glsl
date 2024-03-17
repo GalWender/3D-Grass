@@ -20,15 +20,15 @@ void main () {
     color = mix(color,uColorSand,sandMix);
     float grassMix = step(-0.06,vPosition.y);
     color = mix(color,uGrassBaseColor,grassMix);
-    
+
     float rockThreshold = 0.06;
     rockThreshold += simplexNoise2d(vPosition.xz * 15.0) * 0.06;
     
     float rockMix = step(rockThreshold,vPosition.y);
     color = mix(color,uColorRock,rockMix);
     
-    csm_DiffuseColor = vec4(color,1.0);
+    gl_FragColor = vec4(color * vUpDot,1.0);
 
-    // #include <tonemapping_fragment>
-    // #include <colorspace_fragment>
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
 }

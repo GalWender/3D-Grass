@@ -15,7 +15,7 @@ const BLADE_HEIGHT = 0.8
 const BLADE_HEIGHT_VARIATION = 0.6
 const BLADE_VERTEX_COUNT = 7
 const SURFACE_SIZE = 30
-const GRASS_COUNT = 800000
+const GRASS_COUNT = 300000
 
 const { perlinTexture } = textureService.loadTexture()
 
@@ -69,8 +69,8 @@ function createGrassGeometry() {
     const geo = new THREE.BufferGeometry()
 
     for (let i = 0; i < GRASS_COUNT; i++) {
-        const surfaceMin = (SURFACE_SIZE / 6) * -1
-        const surfaceMax = SURFACE_SIZE / 6
+        const surfaceMin = (SURFACE_SIZE / 8) * -1
+        const surfaceMax = SURFACE_SIZE / 8
 
         const x = utilService.getRandomDoubleInclusive(surfaceMin, surfaceMax)
         const y = utilService.getRandomDoubleInclusive(surfaceMin, surfaceMax)
