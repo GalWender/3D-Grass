@@ -60,7 +60,7 @@ const terrainMaterial = new THREE.ShaderMaterial({
     uniforms,
 })
 
-
+//watch threehourney shadow shader lesson with lighting
 const terrainDepthMaterial = new THREE.ShaderMaterial({
     vertexShader: terrainVertexShader,
     fragmentShader: `
@@ -78,17 +78,17 @@ terrianMesh.scale.set(TerrainScale,TerrainScale,TerrainScale)
 scene.add(terrianMesh)
 
 //water 
-const waterMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(30,30,1,1),
-    new THREE.MeshPhysicalMaterial({
-        transmission:1,
-        roughness:0.3,
-    })
-)
-waterMesh.scale.set(TerrainScale,TerrainScale,TerrainScale)
-waterMesh.rotateX(-Math.PI /2)
-waterMesh.position.y = -0.1
-scene.add(waterMesh)
+// const waterMesh = new THREE.Mesh(
+//     new THREE.PlaneGeometry(30,30,1,1),
+//     new THREE.MeshPhysicalMaterial({
+//         transmission:1,
+//         roughness:0.3,
+//     })
+// )
+// waterMesh.scale.set(TerrainScale,TerrainScale,TerrainScale)
+// waterMesh.rotateX(-Math.PI /2)
+// waterMesh.position.y = -0.1
+// scene.add(waterMesh)
 
 
 //grass
