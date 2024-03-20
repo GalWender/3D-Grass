@@ -41,12 +41,13 @@ rgbeLoader.load('/spruit_sunrise.hdr', (environmentMap) => {
 
 // terrain 
 const TerrainScale = 1
-const terrainGeometry = new THREE.PlaneGeometry(30, 30, 500, 500)
+const terrainGeometry = new THREE.PlaneGeometry(10, 10, 500, 500)
 
 // terrainGeometry.deleteAttribute('uv')
 // terrainGeometry.deleteAttribute('normal')
 terrainGeometry.rotateX(- Math.PI / 2)
 const uniforms = {
+    uColorLight: new THREE.Uniform(new THREE.Color('#fef65b')),
     uColorWaterDeep: new THREE.Uniform(new THREE.Color('#002b3d')),
     uColorWaterSurface: new THREE.Uniform(new THREE.Color('#66a8ff')),
     uGrassBaseColor: new THREE.Uniform(new THREE.Color('#214c1a')),
@@ -79,7 +80,7 @@ scene.add(terrianMesh)
 
 //water 
 // const waterMesh = new THREE.Mesh(
-//     new THREE.PlaneGeometry(30,30,1,1),
+//     new THREE.PlaneGeometry(10,10,1,1),
 //     new THREE.MeshPhysicalMaterial({
 //         transmission:1,
 //         roughness:0.3,
@@ -120,7 +121,7 @@ directionalLight.shadow.camera.left = -8
 scene.add(directionalLight)
 
 const helper = new THREE.DirectionalLightHelper(directionalLight, 5);
-scene.add(helper);
+// scene.add(helper);
 
 /**
  * Sizes

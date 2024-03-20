@@ -33,5 +33,10 @@ void main() {
 
     vPosition.x += wave(uv.x * 10.0, 0.3, 0.1,vPosition.y);
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(vPosition, 1.0);
+    vec4 modelPosition = modelMatrix * vec4(vPosition, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * modelPosition;
+
+    vec4 modelNormal = modelMatrix * vec4(vNormal, 0.0);
+    vNormal = modelNormal.xyz;
+    vPosition = modelPosition.xyz;
 }
