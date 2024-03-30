@@ -15,7 +15,7 @@ const BLADE_HEIGHT = 0.8
 const BLADE_HEIGHT_VARIATION = 0.6
 const BLADE_VERTEX_COUNT = 15
 const SURFACE_SIZE = 10
-const GRASS_COUNT = 300000
+const GRASS_COUNT = 150000
 
 const { perlinTexture } = textureService.loadTexture()
 
@@ -68,29 +68,29 @@ function createGrassGeometry() {
 
     const geo = new THREE.BufferGeometry()
 
-    // for (let i = 0; i < GRASS_COUNT; i++) {
-    //     const surfaceMin = (SURFACE_SIZE / 8) * -1
-    //     const surfaceMax = SURFACE_SIZE / 8
+    for (let i = 0; i < GRASS_COUNT; i++) {
+        const surfaceMin = (SURFACE_SIZE / 2) * -1
+        const surfaceMax = SURFACE_SIZE / 2
 
-    //     const x = utilService.getRandomDoubleInclusive(surfaceMin, surfaceMax)
-    //     const y = utilService.getRandomDoubleInclusive(surfaceMin, surfaceMax)
+        const x = utilService.getRandomDoubleInclusive(surfaceMin, surfaceMax)
+        const y = utilService.getRandomDoubleInclusive(surfaceMin, surfaceMax)
 
 
-    //     uvs.push(
-    //         ...Array.from({ length: BLADE_VERTEX_COUNT }).flatMap(() => [
-    //             utilService.interpolate(x, surfaceMin, surfaceMax, 0, 1),
-    //             utilService.interpolate(y, surfaceMin, surfaceMax, 0, 1)
-    //         ])
-    //     )
+        uvs.push(
+            ...Array.from({ length: BLADE_VERTEX_COUNT }).flatMap(() => [
+                utilService.interpolate(x, surfaceMin, surfaceMax, 0, 1),
+                utilService.interpolate(y, surfaceMin, surfaceMax, 0, 1)
+            ])
+        )
 
-    //     const angle = Math.random() * 360
-    //     const blade = computeBlade()
-    //     positions.push(...blade.positions)
-    //     for (let j = 0; j < BLADE_VERTEX_COUNT; j++) {
-    //         offsets.push(x, 0, y)
-    //         angles.push(angle)
-    //     }
-    // }
+        const angle = Math.random() * 360
+        const blade = computeBlade()
+        positions.push(...blade.positions)
+        for (let j = 0; j < BLADE_VERTEX_COUNT; j++) {
+            offsets.push(x, 0, y)
+            angles.push(angle)
+        }
+    }
 
     // const GRASS_PER_CELL = 170; // Number of grass blades per cell
     // console.log(GRASS_PER_CELL * (SURFACE_SIZE / 0.4) * (SURFACE_SIZE / 0.4) * 45);
@@ -125,39 +125,39 @@ function createGrassGeometry() {
     // }
     // const GRASS_PER_CELL = 170; // Number of grass blades per cell
     // console.log(GRASS_PER_CELL * (SURFACE_SIZE / 0.4) * (SURFACE_SIZE / 0.4) * 45);
-    let grassCount = 0
-    let vertexCount = 0
-    for (let x = -(SURFACE_SIZE / 2); x < (SURFACE_SIZE / 2); x += 0.015) {
-        for (let z = -(SURFACE_SIZE / 2); z < (SURFACE_SIZE / 2); z += 0.015) {
-            // for (let i = 0; i < GRASS_PER_CELL; i++) {
-                // const posX = x + 0.25 + utilService.getRandomDoubleInclusive(-0.15, 0.15); // Calculate x position based on grid coordinate
-                // const posZ = z + 0.25 + utilService.getRandomDoubleInclusive(-0.15, 0.15); // Calculate z position based on grid coordinate
-                const posX = x + (Math.random() - 0.5) * 0.05 // Calculate x position based on grid coordinate
-                const posZ = z + (Math.random() - 0.5) * 0.05// Calculate z position based on grid coordinate
-                const posY = 0; // Assuming y-coordinate is always 0
+    // let grassCount = 0
+    // let vertexCount = 0
+    // for (let x = -(SURFACE_SIZE / 2); x < (SURFACE_SIZE / 2); x += 0.05) {
+    //     for (let z = -(SURFACE_SIZE / 2); z < (SURFACE_SIZE / 2); z += 0.05) {
+    //         // for (let i = 0; i < GRASS_PER_CELL; i++) {
+    //             // const posX = x + 0.25 + utilService.getRandomDoubleInclusive(-0.15, 0.15); // Calculate x position based on grid coordinate
+    //             // const posZ = z + 0.25 + utilService.getRandomDoubleInclusive(-0.15, 0.15); // Calculate z position based on grid coordinate
+    //             const posX = x + (Math.random() - 0.5) * 0.05 // Calculate x position based on grid coordinate
+    //             const posZ = z + (Math.random() - 0.5) * 0.05// Calculate z position based on grid coordinate
+    //             const posY = 0; // Assuming y-coordinate is always 0
     
-                uvs.push(
-                    ...Array.from({ length: 15 }).flatMap(() => [
-                        utilService.interpolate(posX, -(SURFACE_SIZE / 2), (SURFACE_SIZE / 2), 0, 1),
-                        utilService.interpolate(posZ, -(SURFACE_SIZE / 2), (SURFACE_SIZE / 2), 0, 1)
-                    ])
-                );
+    //             uvs.push(
+    //                 ...Array.from({ length: 15 }).flatMap(() => [
+    //                     utilService.interpolate(posX, -(SURFACE_SIZE / 2), (SURFACE_SIZE / 2), 0, 1),
+    //                     utilService.interpolate(posZ, -(SURFACE_SIZE / 2), (SURFACE_SIZE / 2), 0, 1)
+    //                 ])
+    //             );
     
-                const angle = Math.random() * 360;                          
-                const blade = computeBlade();
-                positions.push(...blade.positions);
-                for (let j = 0; j < 15; j++) {
-                    offsets.push(posX, posY, posZ);
-                    angles.push(angle);
-                }
-                grassCount+=1
-                vertexCount+=15
-                // vertID[i] = i;
-            // }
-        }
-    }
-    console.log('grass amount: ',grassCount);
-    console.log('vertices count:',vertexCount);
+    //             const angle = Math.random() * 360;                          
+    //             const blade = computeBlade();
+    //             positions.push(...blade.positions);
+    //             for (let j = 0; j < 15; j++) {
+    //                 offsets.push(posX, posY, posZ);
+    //                 angles.push(angle);
+    //             }
+    //             grassCount+=1
+    //             vertexCount+=15
+    //             // vertID[i] = i;
+    //         // }
+    //     }
+    // }
+    // console.log('grass amount: ',grassCount);
+    // console.log('vertices count:',vertexCount);
 
     geo.setAttribute(
         'position',
